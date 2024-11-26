@@ -1,0 +1,11 @@
+[server.mysql]
+
+host = "localhost"
+port = 3306
+user = "root"
+passwd = "1234567"
+dbname = "root"
+max_idle_conns = 100
+conn_max_idle_time = 300
+max_open_conns = 100
+conn_max_lifetime = 3600
