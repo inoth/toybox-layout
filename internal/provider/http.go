@@ -1,4 +1,4 @@
-package register
+package provider
 
 import (
 	"github.com/inoth/toybox-layout/internal/controller"
