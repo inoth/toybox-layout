@@ -11,15 +11,15 @@ import (
 	"github.com/inoth/toybox-layout/internal/controller"
 	"github.com/inoth/toybox-layout/internal/provider"
 	"github.com/inoth/toybox-layout/internal/service"
+	"github.com/inoth/toybox/config"
 )
 
 // Injectors from wire.go:
 
-func initApp(dir string) *toybox.ToyBox {
-	configMate := provider.NewConfigMate(dir)
+func initApp(conf config.ConfigMate) *toybox.ToyBox {
 	helloService := service.NewHelloService()
 	helloController := controller.NewHelloController(helloService)
 	ginHttpServer := provider.NewHttpServer(helloController)
-	toyBox := newApp(configMate, ginHttpServer)
+	toyBox := newApp(conf, ginHttpServer)
 	return toyBox
 }

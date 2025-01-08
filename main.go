@@ -2,15 +2,24 @@ package main
 
 import (
 	"context"
-	"os"
+	"errors"
+	"log"
+	"time"
 
 	"github.com/inoth/toybox"
 	"github.com/inoth/toybox/config"
-	"github.com/inoth/toybox/ginsvr"
+	"github.com/inoth/toybox/config/file"
+	"github.com/inoth/toybox/config/toml"
+	"github.com/inoth/toybox/ginserver"
 )
 
-func newApp(conf config.ConfigMate,
-	hs *ginsvr.GinHttpServer,
+var (
+	DefaultDir = "config"
+)
+
+func newApp(
+	conf config.ConfigMate,
+	hs *ginserver.GinHttpServer,
 ) *toybox.ToyBox {
 	t := toybox.New(
 		toybox.WithConfig(conf),
@@ -22,13 +31,19 @@ func newApp(conf config.ConfigMate,
 }
 
 func main() {
-	cfgDir := "config"
-	if os.Getenv("CONFIG_ENV") == "dev" {
-		cfgDir = "../config"
-	}
-	app := initApp(cfgDir)
+	cfg := toml.NewConfiguration(
+		config.WithSource(
+			file.NewSource(DefaultDir),
+		),
+	)
 
-	if err := app.Run(); err != nil && err != context.Canceled {
+restart:
+	app := initApp(cfg)
+	if err := app.Run(); err != nil && !errors.Is(err, context.Canceled) && !errors.Is(err, toybox.ErrRestart) {
 		panic(err)
+	} else if errors.Is(err, toybox.ErrRestart) {
+		log.Println("restart dbproxy, wait 5s...")
+		time.Sleep(time.Second * 5)
+		goto restart
 	}
 }
