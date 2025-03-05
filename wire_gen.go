@@ -8,18 +8,25 @@ package main
 
 import (
 	"github.com/inoth/toybox"
-	"github.com/inoth/toybox-layout/internal/controller"
+	"github.com/inoth/toybox-layout/internal/biz"
+	"github.com/inoth/toybox-layout/internal/data/user"
+	"github.com/inoth/toybox-layout/internal/handler"
 	"github.com/inoth/toybox-layout/internal/provider"
-	"github.com/inoth/toybox-layout/internal/service"
+	"github.com/inoth/toybox/component/database/sqlite"
 	"github.com/inoth/toybox/config"
 )
 
 // Injectors from wire.go:
 
 func initApp(conf config.ConfigMate) *toybox.ToyBox {
-	helloService := service.NewHelloService()
-	helloController := controller.NewHelloController(helloService)
-	ginHttpServer := provider.NewHttpServer(helloController)
-	toyBox := newApp(conf, ginHttpServer)
+	logger := provider.NewLogger(conf)
+	sqliteComponent := database.NewGormDatabase(conf)
+	userRepo := user.NewUserRepo(logger, sqliteComponent)
+	userUsecase := biz.NewUserUsecase(logger, userRepo)
+	userInfoHandler := handler.NewUserInfoHandler(logger, userUsecase)
+	prometheus := provider.NewMetric()
+	ginHttpServer := provider.NewHttpServer(userInfoHandler, prometheus)
+	profile := provider.NewProperty()
+	toyBox := newApp(conf, ginHttpServer, prometheus, profile)
 	return toyBox
 }
